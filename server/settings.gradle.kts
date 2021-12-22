@@ -1,0 +1,1 @@
+rootProject.name = "com.ddxh2.live-games"
