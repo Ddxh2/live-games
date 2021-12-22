@@ -126,3 +126,13 @@ dist
 
 # TernJS port file
 .tern-port
+
+build/
+
+.gradle/
+
+.idea/
+
+*.bin
+
+*.lock

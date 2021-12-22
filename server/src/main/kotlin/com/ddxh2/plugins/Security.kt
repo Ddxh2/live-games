@@ -1,5 +1,7 @@
 package com.ddxh2.plugins
 
+import com.ddxh2.data.globals.generateUserId
+import com.ddxh2.sessions.UserSession
 import io.ktor.sessions.*
 import io.ktor.application.*
 import io.ktor.response.*
@@ -7,18 +9,17 @@ import io.ktor.request.*
 import io.ktor.routing.*
 
 fun Application.configureSecurity() {
-    data class MySession(val count: Int = 0)
+    var guestCounter: Int = 0
     install(Sessions) {
-        cookie<MySession>("MY_SESSION") {
-            cookie.extensions["SameSite"] = "lax"
+        cookie<UserSession>("USER_SESSION"){
         }
     }
 
-    routing {
-        get("/session/increment") {
-                val session = call.sessions.get<MySession>() ?: MySession()
-                call.sessions.set(session.copy(count = session.count + 1))
-                call.respondText("Counter is ${session.count}. Refresh to increment.")
-            }
+    intercept(ApplicationCallPipeline.Features){
+        if(call.sessions.get<UserSession>()== null){
+            val userId = generateUserId()
+            val username = call.parameters["username"] ?: "Guest ${guestCounter++}"
+            call.sessions.set(UserSession(userId = userId, username= username))
+        }
     }
 }
