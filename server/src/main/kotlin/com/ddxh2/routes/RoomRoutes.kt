@@ -4,17 +4,20 @@ import com.ddxh2.controllers.RoomController
 import com.ddxh2.data.globals.GameHall
 import com.ddxh2.data.globals.generateRoomKey
 import com.ddxh2.data.user.User
+import com.ddxh2.inputs.OpenRoomInput
 import com.ddxh2.sessions.UserSession
 import io.ktor.application.*
 import io.ktor.http.*
+import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 
 fun Route.openRoom(roomController: RoomController) {
-    get("/open-room") {
-        val roomName: String? = call.parameters["roomName"]
-        val maxOccupancy: Int = call.parameters["maxOccupancy"]?.toInt() ?: 2
+    post("/open-room") {
+        val openRoomInput: OpenRoomInput = call.receive<OpenRoomInput>()
+        val roomName: String? = openRoomInput.roomName
+        val maxOccupancy: Int = openRoomInput.maxOccupancy
         if (roomName != null) {
             val roomKey = generateRoomKey()
             val newRoom = roomController.onOpen(roomKey, roomName, maxOccupancy)
@@ -28,13 +31,13 @@ fun Route.openRoom(roomController: RoomController) {
     }
 }
 
-fun Route.closeRoom(roomController: RoomController){
-    delete("/delete-room"){
-        val roomKey:String? = call.parameters["roomKey"]
-        var responseCode:HttpStatusCode = HttpStatusCode.BadRequest
-        var responseMessage:String = ""
+fun Route.closeRoom(roomController: RoomController) {
+    delete("/delete-room") {
+        val roomKey: String? = call.receive<String>()
+        var responseCode: HttpStatusCode = HttpStatusCode.BadRequest
+        var responseMessage: String = ""
 
-        if(roomKey != null){
+        if (roomKey != null) {
             roomController.onClose(roomKey)
             responseCode = HttpStatusCode.OK
             responseMessage = "Successfully closed the room with key $roomKey"
@@ -46,8 +49,8 @@ fun Route.closeRoom(roomController: RoomController){
 }
 
 fun Route.joinRoom(roomController: RoomController) {
-    get("/join-room") {
-        val roomKey: String? = call.parameters["roomKey"]
+    put("/join-room") {
+        val roomKey: String? = call.receive<String>()
         var responseMessage: String = ""
         var responseCode: HttpStatusCode = HttpStatusCode.BadRequest
         if (roomKey != null) {
@@ -57,7 +60,7 @@ fun Route.joinRoom(roomController: RoomController) {
                 if (user != null) {
                     roomController.onJoin(key = roomKey, user = user)
                     responseCode = HttpStatusCode.OK
-                    responseMessage="Successfully added user ${user.username} to room with key ${roomKey}"
+                    responseMessage = "Successfully added user ${user.username} to room with key ${roomKey}"
                 } else {
                     responseMessage = "User doesn't exist"
                 }
@@ -73,28 +76,30 @@ fun Route.joinRoom(roomController: RoomController) {
     }
 }
 
-fun Route.leaveRoom(roomController: RoomController){
-    get("/leave-room"){
+fun Route.leaveRoom(roomController: RoomController) {
+    delete("/leave-room") {
         var responseCode = HttpStatusCode.BadRequest
         var responseMessage = ""
 
-        val roomKey:String? = call.parameters["roomKey"]
+        val roomKey: String? = call.receive<String>()
 
-        if(roomKey != null){
+        println("room key is $roomKey")
+
+        if (roomKey != null) {
             val userId: String? = call.sessions.get<UserSession>()?.userId
             if (userId != null) {
                 val user: User? = GameHall.getUserById(userId)
                 if (user != null) {
                     roomController.onLeave(key = roomKey, user = user)
                     responseCode = HttpStatusCode.OK
-                    responseMessage="Successfully removed user ${user.username} from room with key ${roomKey}"
+                    responseMessage = "Successfully removed user ${user.username} from room with key ${roomKey}"
                 } else {
                     responseMessage = "User doesn't exist"
                 }
             } else {
                 responseMessage = "User Id is Null"
             }
-        }else {
+        } else {
             responseMessage = "Room Key Not Supplied"
         }
 
@@ -102,8 +107,8 @@ fun Route.leaveRoom(roomController: RoomController){
     }
 }
 
-fun Route.getRooms(roomController: RoomController){
-    get("/all-rooms"){
+fun Route.getRooms(roomController: RoomController) {
+    get("/all-rooms") {
         call.respond(HttpStatusCode.OK, roomController.getRooms().toString())
     }
 }

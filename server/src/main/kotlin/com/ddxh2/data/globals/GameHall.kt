@@ -2,6 +2,7 @@ package com.ddxh2.data.globals
 
 import com.ddxh2.data.room.Room
 import com.ddxh2.data.user.User
+import com.ddxh2.exceptions.UserExistsException
 import io.ktor.util.*
 
 object GameHall {
@@ -9,6 +10,9 @@ object GameHall {
     val rooms: MutableMap<String, Room> = mutableMapOf<String, Room>()
 
     fun addUser(userId: String, username: String): User {
+        if(users.containsKey(userId)){
+            throw UserExistsException()
+        }
         val newUser = User(userId = userId, username = username)
         users[userId] = newUser
         return newUser
