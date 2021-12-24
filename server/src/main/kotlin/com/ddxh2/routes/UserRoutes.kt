@@ -1,38 +1,49 @@
 package com.ddxh2.routes
 
-import com.ddxh2.controllers.UserController
-import com.ddxh2.data.globals.generateUserId
-import com.ddxh2.data.user.User
-import com.ddxh2.exceptions.UserExistsException
-import com.ddxh2.sessions.UserSession
+import com.ddxh2.controller.UserController
+import com.ddxh2.session.UserSession
 import io.ktor.application.*
 import io.ktor.http.*
-import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
 
-fun Route.addUser(userController: UserController) {
-    post("/add-user") {
+fun Route.logOn(userController: UserController) {
+    post("/logOn") {
         val userSession = call.sessions.get<UserSession>()
-        var username = call.parameters["username"]
-        println("username is $username and userSession username is ${userSession?.username}")
-        if (userSession != null && (username == null || username == userSession.username)) {
-            username = userSession.username
-            val userId = userSession.userId
-            try {
-                userController.onJoin(userId, username)
-            } catch (e: UserExistsException) {
-                call.respond(HttpStatusCode.BadRequest, e.message!! as String)
+        var responseCode: HttpStatusCode = HttpStatusCode.BadRequest
+        var responseMessage: String = ""
+        if (userSession != null) {
+            val username = userSession.username
+            val newUser = userController.logOn(username)
+            if (newUser != null) {
+                responseCode = HttpStatusCode.OK
+                responseMessage = "Welcome $username!"
+            } else {
+                responseMessage = "Failed to create a new user"
             }
-            call.respond(HttpStatusCode.OK, "Added user $username with id $userId")
+        } else {
+            responseMessage = "Failed to log in"
         }
-        call.respond(HttpStatusCode.BadRequest, "Already logged in")
+
+        call.respond(responseCode, responseMessage)
     }
 }
 
-fun Route.getUsers(userController: UserController) {
-    get("/all-users") {
+fun Route.logOut(userController: UserController) {
+    delete("/logOut") {
+        val userSession = call.sessions.get<UserSession>()
+        val username: String? = userSession?.username
+        userSession?.let {
+            userController.logOut(it.username)
+            call.sessions.clear<UserSession>()
+        }
+        call.respond(HttpStatusCode.OK, "Goodbye ${username ?: ""}")
+    }
+}
+
+fun Route.getUsers(userController:UserController){
+    get("/allUsers"){
         call.respond(HttpStatusCode.OK, userController.getUsers().toString())
     }
 }

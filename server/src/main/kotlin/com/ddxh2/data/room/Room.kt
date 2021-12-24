@@ -1,32 +1,47 @@
 package com.ddxh2.data.room
 
+import com.ddxh2.data.game.Game
+import com.ddxh2.data.game.TestGame
 import com.ddxh2.data.user.User
+import com.ddxh2.exceptions.AlreadyInRoomException
+import io.ktor.http.cio.websocket.*
+import kotlinx.serialization.Serializable
+import java.lang.reflect.Type
 
-class Room(val key: String, val name: String, val maxOccupancy: Int = 2) {
-    var members: MutableList<User> = mutableListOf<User>()
+@Serializable
+data class Room(val roomId: String, private val key: String) {
+    private val members: MutableList<User> = mutableListOf<User>()
 
-    fun joinRoom(roomKey: String, user: User) {
+    private var currentGame: Game? = null
+
+    fun join(user: User, roomKey: String): Unit {
+        if (members.contains(user)){
+            throw AlreadyInRoomException()
+        }
         if (roomKey == key) {
-            if (members.size < maxOccupancy) {
-                members.add(user)
-            } else {
-                println("Room Full")
-            }
-        } else {
-            println("Wrong Key")
+            members.add(user)
         }
     }
 
-    fun leaveRoom(user: User){
-        members = members.filter{it != user} as MutableList<User>
+    suspend fun leave(user: User) {
+        members.remove(user)
+        user.currentSocket?.close()
     }
 
-    override fun toString():String{
-        var returnString = "Room(key: $key, name: $name, maxOccupancy: $maxOccupancy){ members: ["
-        for (user in members){
-            returnString += "${user.toString()}, "
-        }
-        returnString += "]"
-        return "$returnString }"
+    fun getSize():Int{
+        return members.size
+    }
+
+    suspend fun startGame() {
+        currentGame = TestGame(members)
+        currentGame!!.startGame()
+    }
+
+    suspend fun performAction(action: Any) {
+        currentGame!!.performAction(action)
+    }
+
+    suspend fun sendMessage(message:String){
+        members.forEach{member->member?.currentSocket?.send(Frame.Text(message))}
     }
 }

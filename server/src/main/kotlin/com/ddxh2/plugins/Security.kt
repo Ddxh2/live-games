@@ -1,7 +1,7 @@
 package com.ddxh2.plugins
 
-import com.ddxh2.data.globals.generateUserId
-import com.ddxh2.sessions.UserSession
+import com.ddxh2.session.RoomSession
+import com.ddxh2.session.UserSession
 import io.ktor.sessions.*
 import io.ktor.application.*
 import io.ktor.response.*
@@ -13,24 +13,28 @@ fun Application.configureSecurity() {
     install(Sessions) {
         cookie<UserSession>("USER_SESSION") {
         }
+        cookie<RoomSession>("ROOM_SESSION") {
+        }
     }
 
     intercept(ApplicationCallPipeline.Features) {
         var path: String = call.request.path()
-        println("Path is $path")
 
-        if (path.startsWith("/add-user")) {
+        if (path.startsWith("/logOn")) {
             val session = call.sessions.get<UserSession>()
-            println(call.parameters["username"])
-            val username: String = call.parameters["username"] ?: "Guest ${guestCounter++}"
 
             if (session == null) {
-                val userId: String = generateUserId()
-                call.sessions.set(UserSession(userId, username))
+                var username: String = call.receive()
+                username = if (username == "") "Guest ${guestCounter++}" else username
+                call.sessions.set(UserSession(username))
             }
-        } else if (path == "/delete-user") {
-            call.sessions.clear<UserSession>()
+        } else if (path.startsWith("/joinRoom")) {
+            val session = call.sessions.get<RoomSession>()
+            val roomId: String? = call.parameters["roomId"]
+            println("Getting room id")
+            if (session == null && roomId != null) {
+                call.sessions.set(RoomSession(roomId))
+            }
         }
-
     }
 }

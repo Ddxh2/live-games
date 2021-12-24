@@ -1,10 +1,15 @@
 package com.ddxh2.dependencyInjection
 
-import com.ddxh2.controllers.RoomController
-import com.ddxh2.controllers.UserController
+import com.ddxh2.controller.RoomController
+import com.ddxh2.controller.UserController
 import org.koin.dsl.module
 
-val mainModule = module {
-    single { UserController() }
-    single{ RoomController()}
+var mainModule = module {
+    single {
+        RoomController()
+    }
+
+    single{
+        UserController()
+    }
 }
