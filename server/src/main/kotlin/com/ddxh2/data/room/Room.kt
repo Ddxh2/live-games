@@ -2,12 +2,10 @@ package com.ddxh2.data.room
 
 import com.ddxh2.data.game.AllGames
 import com.ddxh2.data.game.Game
-import com.ddxh2.data.game.TestGame
 import com.ddxh2.data.user.User
 import com.ddxh2.exceptions.AlreadyInRoomException
 import io.ktor.http.cio.websocket.*
 import kotlinx.serialization.Serializable
-import java.lang.reflect.Type
 
 @Serializable
 data class Room(val roomId: String, private val key: String) {
