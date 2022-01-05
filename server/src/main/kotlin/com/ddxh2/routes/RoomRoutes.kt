@@ -6,6 +6,7 @@ import com.ddxh2.data.room.Room
 import com.ddxh2.data.user.User
 import com.ddxh2.exceptions.AlreadyInRoomException
 import com.ddxh2.exceptions.RoomDoesNotExistException
+import com.ddxh2.handler.roomSocketMessageHandler
 import com.ddxh2.session.RoomSession
 import com.ddxh2.session.UserSession
 import io.ktor.application.*
@@ -17,11 +18,13 @@ import io.ktor.routing.*
 import io.ktor.sessions.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 fun Route.openRoom(roomController: RoomController) {
     post("/openRoom") {
         val roomCreds: List<String> = roomController.openRoom()
-        call.respond(HttpStatusCode.OK, "Room Id: ${roomCreds[0]}, Room Key: ${roomCreds[1]}")
+        call.respond(HttpStatusCode.OK, Json.encodeToString((roomCreds)))
     }
 }
 
@@ -62,45 +65,6 @@ fun Route.joinRoom(userController: UserController, roomController: RoomControlle
         println(responseCode)
         println(responseMessage)
         call.respond(responseCode, responseMessage)
-    }
-}
-
-fun Route.leaveRoom(userController: UserController, roomController: RoomController) {
-    delete("/leaveRoom") {
-        val userSession = call.sessions.get<UserSession>()
-        val roomSession = call.sessions.get<RoomSession>()
-
-        var responseCode: HttpStatusCode = HttpStatusCode.BadRequest
-        var responseMessage: String
-
-        if (userSession == null) {
-            responseMessage = "Not Logged In"
-        } else if (userController.getUserByUsername(userSession.username) == null) {
-            responseMessage = "User does not exist"
-        } else if (roomSession == null) {
-            responseMessage = "Not currently a member of any room"
-        } else if (roomController.getRoomById(roomSession.roomId) == null) {
-            responseMessage = "Room does not exist"
-        } else {
-            val user = userController.getUserByUsername(userSession.username)!!
-            roomController.leaveRoom(roomSession.roomId, user)
-
-            if (roomController.getRoomSizeById(roomSession.roomId) == 0) {
-                roomController.closeRoom(roomSession.roomId)
-            }
-
-            call.sessions.clear<RoomSession>()
-            responseCode = HttpStatusCode.OK
-            responseMessage = "Successfully left the room!"
-        }
-
-        call.respond(responseCode, responseMessage)
-    }
-}
-
-fun Route.getRooms(roomController: RoomController) {
-    get("/allRooms") {
-        call.respond(HttpStatusCode.OK, roomController.getRooms().toString())
     }
 }
 
@@ -146,9 +110,12 @@ fun Route.enterRoom(userController: UserController, roomController: RoomControll
             roomController.sendMessage(room.roomId, "Hello")
 
             incoming.consumeEach { frame ->
-                if (frame is Frame.Text) {
-                    println(frame)
-                }
+                println(frame)
+                roomSocketMessageHandler(room, frame)
+//                if (frame is Frame.Text) {
+//                    println(frame.readText())
+//                    roomController.sendMessage(room.roomId, "Received your message ${frame.readText()}")
+//                }
             }
         } catch (e: AlreadyInRoomException) {
             call.respond(HttpStatusCode.BadRequest, e.message ?: "")
@@ -158,9 +125,47 @@ fun Route.enterRoom(userController: UserController, roomController: RoomControll
             e.printStackTrace()
         } finally {
             // Disconnect
-            roomController.leaveRoom(room.roomId, user)
             userController.removeSocket(user.username)
             println("Disconnect")
         }
+    }
+}
+
+fun Route.leaveRoom(userController: UserController, roomController: RoomController) {
+    delete("/leaveRoom") {
+        val userSession = call.sessions.get<UserSession>()
+        val roomSession = call.sessions.get<RoomSession>()
+
+        var responseCode: HttpStatusCode = HttpStatusCode.BadRequest
+        var responseMessage: String
+
+        if (userSession == null) {
+            responseMessage = "Not Logged In"
+        } else if (userController.getUserByUsername(userSession.username) == null) {
+            responseMessage = "User does not exist"
+        } else if (roomSession == null) {
+            responseMessage = "Not currently a member of any room"
+        } else if (roomController.getRoomById(roomSession.roomId) == null) {
+            responseMessage = "Room does not exist"
+        } else {
+            val user = userController.getUserByUsername(userSession.username)!!
+            roomController.leaveRoom(roomSession.roomId, user)
+
+            if (roomController.getRoomSizeById(roomSession.roomId) == 0) {
+                roomController.closeRoom(roomSession.roomId)
+            }
+
+            call.sessions.clear<RoomSession>()
+            responseCode = HttpStatusCode.OK
+            responseMessage = "Successfully left the room!"
+        }
+
+        call.respond(responseCode, responseMessage)
+    }
+}
+
+fun Route.getRooms(roomController: RoomController) {
+    get("/allRooms") {
+        call.respond(HttpStatusCode.OK, Json.encodeToString(roomController.getRooms()))
     }
 }

@@ -24,5 +24,7 @@ fun Application.configureRouting() {
         leaveRoom(userController, roomController)
         enterRoom(userController, roomController)
         getRooms(roomController)
+
+        getAllGames()
     }
 }

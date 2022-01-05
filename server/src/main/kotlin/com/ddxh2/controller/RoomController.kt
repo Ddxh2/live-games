@@ -61,6 +61,7 @@ class RoomController {
     }
 
     suspend fun sendMessage(roomId: String, message:String){
+        println("${rooms[roomId]}")
         rooms[roomId]?.sendMessage(message)
     }
 }

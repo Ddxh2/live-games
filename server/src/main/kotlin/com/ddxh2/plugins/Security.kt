@@ -12,8 +12,10 @@ fun Application.configureSecurity() {
     var guestCounter: Int = 0
     install(Sessions) {
         cookie<UserSession>("USER_SESSION") {
+            cookie.httpOnly=false
         }
         cookie<RoomSession>("ROOM_SESSION") {
+            cookie.httpOnly=false
         }
     }
 
@@ -22,9 +24,9 @@ fun Application.configureSecurity() {
 
         if (path.startsWith("/logOn")) {
             val session = call.sessions.get<UserSession>()
-
             if (session == null) {
                 var username: String = call.receive()
+                println(username)
                 username = if (username == "") "Guest ${guestCounter++}" else username
                 call.sessions.set(UserSession(username))
             }

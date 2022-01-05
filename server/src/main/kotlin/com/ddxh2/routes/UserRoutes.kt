@@ -7,6 +7,8 @@ import io.ktor.http.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import io.ktor.sessions.*
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 fun Route.logOn(userController: UserController) {
     post("/logOn") {
@@ -15,6 +17,7 @@ fun Route.logOn(userController: UserController) {
         var responseMessage: String = ""
         if (userSession != null) {
             val username = userSession.username
+            println(username)
             val newUser = userController.logOn(username)
             if (newUser != null) {
                 responseCode = HttpStatusCode.OK
@@ -36,14 +39,14 @@ fun Route.logOut(userController: UserController) {
         val username: String? = userSession?.username
         userSession?.let {
             userController.logOut(it.username)
-            call.sessions.clear<UserSession>()
         }
+        call.sessions.clear<UserSession>()
         call.respond(HttpStatusCode.OK, "Goodbye ${username ?: ""}")
     }
 }
 
 fun Route.getUsers(userController:UserController){
     get("/allUsers"){
-        call.respond(HttpStatusCode.OK, userController.getUsers().toString())
+        call.respond(HttpStatusCode.OK, Json.encodeToString(userController.getUsers()))
     }
 }

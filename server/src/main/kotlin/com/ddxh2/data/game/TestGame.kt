@@ -13,6 +13,11 @@ class TestGame(override var players: List<User>) : Game {
         gameState = false
         currentPlayer = players.random()
         currentPlayer!!.currentSocket!!.send(Frame.Text("The game has started, make a move"))
+        players.forEach { it ->
+            if (it != currentPlayer) {
+                it.currentSocket!!.send(Frame.Text("The Game Has Started, waiting for ${currentPlayer!!.username} to make a move"))
+            }
+        }
     }
 
     override suspend fun endGame(): Unit {

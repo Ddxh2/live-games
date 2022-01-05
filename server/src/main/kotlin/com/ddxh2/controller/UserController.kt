@@ -21,9 +21,11 @@ class UserController {
     }
 
     fun addSocket(username: String, socket: WebSocketSession) {
-
         if (users.containsKey(username)) {
-            users[username]!!.currentSocket = socket
+            val user: User? = users[username]
+            println(user?.currentSocket)
+            println(socket)
+            user?.currentSocket = socket
         }
     }
 

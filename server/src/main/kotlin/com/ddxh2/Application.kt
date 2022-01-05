@@ -12,6 +12,7 @@ fun Application.module() {
     install(org.koin.ktor.ext.Koin){
         modules(mainModule)
     }
+    configureHTTP()
     configureSockets()
     configureRouting()
     configureSerialization()

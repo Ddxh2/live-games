@@ -1,5 +1,6 @@
 package com.ddxh2.data.room
 
+import com.ddxh2.data.game.AllGames
 import com.ddxh2.data.game.Game
 import com.ddxh2.data.game.TestGame
 import com.ddxh2.data.user.User
@@ -10,12 +11,12 @@ import java.lang.reflect.Type
 
 @Serializable
 data class Room(val roomId: String, private val key: String) {
-    private val members: MutableList<User> = mutableListOf<User>()
+    private val members: MutableList<User> = mutableListOf()
 
     private var currentGame: Game? = null
 
     fun join(user: User, roomKey: String): Unit {
-        if (members.contains(user)){
+        if (members.contains(user)) {
             throw AlreadyInRoomException()
         }
         if (roomKey == key) {
@@ -28,12 +29,13 @@ data class Room(val roomId: String, private val key: String) {
         user.currentSocket?.close()
     }
 
-    fun getSize():Int{
+    fun getSize(): Int {
         return members.size
     }
 
-    suspend fun startGame() {
-        currentGame = TestGame(members)
+    suspend fun startGame(gameId: String = AllGames.TEST_GAME) {
+        val gameInstance = com.ddxh2.data.game.startGame(gameId, members)
+        currentGame = gameInstance
         currentGame!!.startGame()
     }
 
@@ -41,7 +43,12 @@ data class Room(val roomId: String, private val key: String) {
         currentGame!!.performAction(action)
     }
 
-    suspend fun sendMessage(message:String){
-        members.forEach{member->member?.currentSocket?.send(Frame.Text(message))}
+    suspend fun sendMessage(message: String) {
+        println("made it to send message")
+        println("$members")
+        members.forEach { member ->
+            println("sending message: '${message}' to $member");
+            member?.currentSocket?.send(Frame.Text(message))
+        }
     }
 }
