@@ -1,25 +1,38 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useContext } from "react";
+import {
+  BrowserRouter as Router,
+  Navigate,
+  Routes,
+  Route,
+} from "react-router-dom";
+
+import routes from "./routes";
+import { UserContext } from "./context/User";
+import { Banner } from "./components";
+
+const { LOGGED_IN, NOT_LOGGED_IN } = routes;
 
 function App() {
+  const { user } = useContext(UserContext);
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <Banner />
+      {!!user ? (
+        <Routes>
+          {LOGGED_IN.map(({ path, Component }, index) => (
+            <Route key={index} path={path} element={<Component />} />
+          ))}
+          <Route key='redirect' path='*' element={<Navigate to='/' />} />
+        </Routes>
+      ) : (
+        <Routes>
+          {NOT_LOGGED_IN.map(({ path, Component }, index) => (
+            <Route key={index} path={path} element={<Component />} />
+          ))}
+          <Route key='redirect' path='*' element={<Navigate to='/auth' />} />
+        </Routes>
+      )}
+    </Router>
   );
 }
 
