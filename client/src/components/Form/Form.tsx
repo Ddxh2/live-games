@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "styled-components";
+import { InputConfig } from "./InputConfig";
 
 type WrapperProps = {
   layout?: string;
@@ -9,6 +10,7 @@ const Wrapper = styled.form<WrapperProps>`
   align-items: center;
   justify-content: flex-start;
   gap: 10px;
+  flex-direction: column;
 
   ${({ layout }) => (!!layout ? layout : "")}
 `;
@@ -17,11 +19,6 @@ const Header = styled.h1`
   font-size: 25px;
   font-weight: 900;
 `;
-
-type InputConfig = {
-  Component: React.FC;
-  props: any;
-};
 
 type FormProps = {
   inputs: InputConfig[];

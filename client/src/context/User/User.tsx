@@ -1,5 +1,4 @@
 import React, { createContext, useReducer, useEffect, Dispatch } from "react";
-import { EnumType } from "typescript";
 
 type UserState = string | null;
 

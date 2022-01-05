@@ -2,18 +2,15 @@ import React from "react";
 import ReactDOM from "react-dom";
 import App from "./App";
 
-import { WebSocketProvider } from "./context/WebSocket";
-import { UserProvider } from "./context/User";
+import ContextProvider from "./context";
 
 import "./index.css";
 
 ReactDOM.render(
   <React.StrictMode>
-    <UserProvider>
-      <WebSocketProvider>
-        <App />
-      </WebSocketProvider>
-    </UserProvider>
+    <ContextProvider>
+      <App />
+    </ContextProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );

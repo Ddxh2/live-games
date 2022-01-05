@@ -1,5 +1,5 @@
 import React, { createContext, useMemo, useState } from "react";
-import { Endpoints } from "../utils/fetchUtils";
+import { Endpoints } from "../../utils/fetchUtils";
 
 interface WebSocketContextType {
   socket: WebSocket | null;

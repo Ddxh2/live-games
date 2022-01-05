@@ -1,7 +1,7 @@
 import React, { MouseEvent, useContext } from "react";
 import styled from "styled-components";
 
-import { UserContext } from "../../context/User";
+import { UserContext } from "../../context/User/";
 import { logOut } from "../../utils/fetchUtils";
 
 const Wrapper = styled.header`

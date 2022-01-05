@@ -2,16 +2,18 @@ import React, { ChangeEvent, useState } from "react";
 import styled from "styled-components";
 
 const Wrapper = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-rows: auto;
+  grid-column-gap: 10px;
 `;
 
 const Label = styled.label`
   font-weight: 800;
   font-size: 18px;
-
+  grid-column-start: 1;
+  grid-column-end: 2;
   &::after {
     content: ":";
   }
@@ -21,6 +23,8 @@ const InputField = styled.input`
   border: none;
   border-radius: 3px;
   padding: 2px 5px 2px 5px;
+  grid-column-start: 2;
+  grid-column-end: 3;
 `;
 
 type InputProps = {

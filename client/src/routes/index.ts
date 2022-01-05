@@ -1,6 +1,6 @@
 import { FC } from "react";
 
-import { LandingPage, RoomPage, AuthPage } from "./pages";
+import { LandingPage, RoomPage, AuthPage, StatsPage } from "./pages";
 
 export type RouteType = {
   path: string;
@@ -16,8 +16,11 @@ const loggedInRoutes: RouteType[] = [
 ];
 const notLoggedInRoutes: RouteType[] = [{ path: "/auth", Component: AuthPage }];
 
+const commonRoutes: RouteType[] = [{ path: "/stats", Component: StatsPage }];
+
 const routes = {
   LOGGED_IN: loggedInRoutes,
   NOT_LOGGED_IN: notLoggedInRoutes,
+  COMMON: commonRoutes,
 };
 export default routes;
